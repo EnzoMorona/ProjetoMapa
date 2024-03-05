@@ -126,7 +126,7 @@
 
         // ----------------------- Inicio do Script ------------------------------------
         
-        let sourceMapa = []
+        let polygonData = null
         var nome = document.getElementById('nome')
 
         MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
@@ -145,6 +145,23 @@
 
         map.on('load', () => {
             toggleSidebar('left');
+
+            map.addLayer({
+                'id': 'map-layer',
+                'type': 'fill',
+                'source': {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'FeatureCollection',
+                        'features': []
+                    }
+                },
+                'paint': {
+                    // Estilo da camada
+                    'fill-color': '#ffffff',
+                    'fill-opacity': 0.5
+                }
+            });
         });
         
         // ----------------------- Criando Mapbox ------------------------------------
@@ -162,56 +179,54 @@
 
 
         map.on('draw.create', function(e) {
-            var mapData = e.features[0]
             // sourceMapa.push(mapData)
             console.log(e.features[0])
-
-        });
-
-        map.on('draw.update', function(e) {
-            var mapData = e.features[0]
-
-            mapData.properties['nome'] = nome.value;
-            mapData.properties['valor1'] = nome.value + 'valor 1';
-
-            sourceMapa.push(mapData);
-            
+            var data = e.features[0]
 
             map.addSource(e.features[0].id, {
                 'type': 'geojson',
                 'data': {
                     'type': 'FeatureCollection',
                     'features': [
-                        mapData
+                        data
                     ]
                 }
-
             })
 
-            console.log(mapData)
+        });
 
-            map.addLayer({
-            'id': 'layer-mapa',
-            'type': 'fill', // Tipo da camada (ponto)
-            'source': e.features[0].id, // Dados da camada
-            'paint': {
-                'fill-opacity': 0.5, // Tamanho dos pontos
-                'fill-color': '#FFFF00' // Cor dos pontos (vermelho)
-            }
-            })
+        map.on('draw.update', function(e) {
+            var data = e.features[0]
+
+            data.properties['nome'] = nome.value;
+            data.properties['valor1'] = nome.value + 'valor 1';
+
+            polygonData = data
+            
+            map.setPaintProperty('map-layer', 'fill-color', {
+                    type: 'identity',
+                    property: 'name'
+            },
+                
+            );
+              
 
      // ----------------------- AJAX ---------------------------------------
 
-            fetch('/save_point/', {
+            console.log(polygonData)
+            
+            fetch('http://127.0.0.1:8000/save_point/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify(sourceMapa )
-            }).then(response => {
-                if (response.ok) {
+                body: JSON.stringify(polygonData)
+            }).then(async function(response) {
+                if (await response.ok) {
                     console.log('Ponto salvo com sucesso!');
+                
+                    console.log(response);
+                    return response.json()
                 } else {
                     console.error('Erro ao salvar ponto!');
                 }
@@ -219,6 +234,15 @@
                 console.error('Erro ao enviar requisição:', error);
             });
         });
+
+        // ------------------------ ON CLICK FEATURES -------------------------------------
+
+
+        map.on('draw.selectionchange', function(e){
+            polygonData = e.features[0]
+
+            console.log(polygonData)
+        })
         
 
 

@@ -202,16 +202,18 @@
 
      // ----------------------- AJAX ---------------------------------------
 
-            fetch('/save_point/', {
+            fetch('/mapa/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify(sourceMapa )
+                body: JSON.stringify(sourceMapa)
             }).then(response => {
                 if (response.ok) {
                     console.log('Ponto salvo com sucesso!');
+                    console.log(sourceMapa);
+                    console.log(response);
                 } else {
                     console.error('Erro ao salvar ponto!');
                 }

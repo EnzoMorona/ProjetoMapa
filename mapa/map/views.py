@@ -13,7 +13,9 @@ def save_point(request):
         # Verificar se há dados no corpo da solicitação
         if request.body:
             # Decodificar os dados JSON do corpo da solicitação
-            data = json.loads(request.body)
+            object = json.loads(request.body)
+            data = Post(json = object)
+            data.save()
             # Aqui você pode acessar os dados conforme necessário
             print(data)
             # Você pode manipular os dados aqui e, em seguida, retornar uma resposta JSON

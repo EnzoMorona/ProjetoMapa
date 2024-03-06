@@ -109,6 +109,7 @@
             <div class="sidebar-content rounded-rect flex-center">
                 <div>
                     <input type="text" id="nome">
+                    <button type="submit" id="postar">Salvar</button>
                 </div>
 
                 <div
@@ -243,6 +244,19 @@
 
             console.log(polygonData)
         })
+
+
+
+        var botaoEnviar = document.getElementById('postar');
+
+        // Adiciona um ouvinte de evento para o clique no botão de envio
+        botaoEnviar.addEventListener('click', function(event) {
+            // Evita que o formulário seja enviado normalmente
+            event.preventDefault();
+
+            // Aqui você pode adicionar o código que deseja executar quando o botão de envio for clicado
+            console.log('Botão de envio clicado!');
+        });
         
 
 

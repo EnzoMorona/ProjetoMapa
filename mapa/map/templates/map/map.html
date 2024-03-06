@@ -110,6 +110,7 @@
                 <div>
                     <input type="text" id="nome">
                     <button type="submit" id="postar">Salvar</button>
+                    <button type="submit" id="enviar">Carregar</button>
                 </div>
 
                 <div
@@ -127,6 +128,7 @@
 
         // ----------------------- Inicio do Script ------------------------------------
         
+        var polygonList = []
         let polygonData = null
         var nome = document.getElementById('nome')
 
@@ -146,6 +148,7 @@
 
         map.on('load', () => {
             toggleSidebar('left');
+            
 
             map.addLayer({
                 'id': 'map-layer',
@@ -163,6 +166,67 @@
                     'fill-opacity': 0.5
                 }
             });
+
+
+
+            fetch('/obter-item/')
+                .then(response => response.json())
+                .then(data => {
+
+                    var features = JSON.parse(data)
+
+                    polygonList = polygonList.concat(features)
+
+                    console.log(polygonList)
+
+                    map.addSource('created-maps', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': polygonList
+                        }
+                    },
+                    )
+                    
+                    map.addLayer({
+                        'id': 'poligono',
+                        'type': 'fill',
+                        'source': 'created-maps',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#088 ',
+                            'fill-opacity': 0.5
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao obter item:', error);
+                });
+            });
+
+        // ----------------------- Recarregar Polygons ------------------------------
+
+        document.getElementById('enviar').addEventListener('click', function(event) {
+            event.preventDefault(); // Evita o envio do formulário
+            fetch('/obter-item/')
+                .then(response => response.json())
+                .then(data => {
+
+                    var features = JSON.parse(data);
+
+                    polygonList = [];
+                    polygonList = polygonList.concat(features);
+                    console.log(polygonList);
+
+                    map.getSource('created-maps').setData({
+                        'type': 'FeatureCollection',
+                        'features': polygonList
+                    });
+
+                })
+                .catch(error => {
+                    console.error('Erro ao obter item:', error);
+                });
         });
         
         // ----------------------- Criando Mapbox ------------------------------------
@@ -209,31 +273,7 @@
                     property: 'name'
             },
                 
-            );
-              
-
-     // ----------------------- AJAX ---------------------------------------
-
-            console.log(polygonData)
-            
-            fetch('http://127.0.0.1:8000/save_point/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(polygonData)
-            }).then(async function(response) {
-                if (await response.ok) {
-                    console.log('Ponto salvo com sucesso!');
-                
-                    console.log(response);
-                    return response.json()
-                } else {
-                    console.error('Erro ao salvar ponto!');
-                }
-            }).catch(error => {
-                console.error('Erro ao enviar requisição:', error);
-            });
+            )
         });
 
         // ------------------------ ON CLICK FEATURES -------------------------------------
@@ -254,8 +294,30 @@
             // Evita que o formulário seja enviado normalmente
             event.preventDefault();
 
-            // Aqui você pode adicionar o código que deseja executar quando o botão de envio for clicado
-            console.log('Botão de envio clicado!');
+    // ----------------------- AJAX ---------------------------------------
+
+               console.log(polygonData)
+            
+            fetch('http://127.0.0.1:8000/save_point/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(polygonData)
+            }).then(async function(response) {
+                if (await response.ok) {
+                    console.log('Ponto salvo com sucesso!');
+                
+                    console.log(response);
+                    return response.json()
+                } else {
+                    console.error('Erro ao salvar ponto!');
+                }
+            }).catch(error => {
+                console.error('Erro ao enviar requisição:', error)
+            })
+
+            console.log('Botão de envio clicado!')
         });
         
 

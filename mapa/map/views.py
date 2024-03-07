@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
+from django.shortcuts import get_object_or_404
 from .models import Post
 import json
 # Create your views here.
@@ -36,21 +37,11 @@ def obter_item(request):
         list_items = [ i for i in list_items ]
 
         response = json.dumps(list_items)
-        # Converta o item para um dicionário ou serialize-o conforme necessário
-         # Substitua 'campo1', 'campo2' pelos nomes reais dos campos
 
-        # Retorne o item como uma resposta JSON
-        # geojson = {
-        #     'type': 'Feature',
-        #     'geometry': {
-        #         item.geometry
-        #     },
-        #     'properties': {
-        #         'id': item.nome  # Se desejar, você pode adicionar mais propriedades aqui
-        #     }
-        # }
-
-        # Retorne o GeoJSON como uma resposta JSON
         return JsonResponse(response, safe=False)
+    
     else:
         return JsonResponse({'erro': 'Método não permitido'}, status=405)
+    
+
+

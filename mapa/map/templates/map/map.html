@@ -18,7 +18,44 @@
 
 
 <body>
+    <!---------------------------- TABS STYLE ------------------------------------------->
 
+    <style>
+        .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+        }
+
+        /* Style the buttons that are used to open the tab content */
+        .tab button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        }
+
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+        background-color: #ddd;
+        }
+
+        /* Create an active/current tablink class */
+        .tab button.active {
+        background-color: #ccc;
+        }
+
+        /* Style the tab content */
+        .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+        }
+    </style>
     <!---------------------------- SIDE BAR STYLE --------------------------------------->
     <style>
         .rounded-rect {
@@ -47,7 +84,7 @@
             width: 95%;
             height: 95%;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 32px;
+            font-size: 20px;
             color: gray;
         }
     
@@ -107,11 +144,13 @@
     <div id="map">
         <div id="left" class="sidebar flex-center left collapsed">
             <div class="sidebar-content rounded-rect flex-center">
-                <div>
-                    <input type="text" id="nome">
+                <div class="container" >
+                    <p>Altura de emissão</p><input type="text" id="alt_emi">
+                    <p>Area de emissão</p><input type="text" id="area_emi">
+                    <p>Altura de terreno</p><input type="text" id="alt_terro"><br>
                     <button type="submit" id="postar">Salvar</button>
                     <button type="submit" id="enviar">Carregar</button>
-                    <button type="submit" id="deletar">Deletar</button>
+
                 </div>
 
                 <div
@@ -132,7 +171,10 @@
         var polygonInfo = null
         var polygonList = []
         let polygonData = null
-        var nome = document.getElementById('nome')
+        var alt_emi = document.getElementById('alt_emi')
+        var area_emi = document.getElementById('area_emi')
+        var alt_terro = document.getElementById('alt_terro')
+   
 
         MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
         MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
@@ -152,9 +194,10 @@
         // ----------------------- Criando Mapbox ------------------------------------
 
                 var draw = new MapboxDraw({
-            displayControlsDefault: false,
+            displayControlsDefault: true,
             controls: {
                 polygon: true,
+                point: true,
                 trash: true
             }
         });
@@ -215,6 +258,7 @@
                             'fill-color': '#088 ',
                             'fill-opacity': 0.5
                         }
+
                     });
 
                 })
@@ -232,7 +276,9 @@
 
                         new maplibregl.Popup()
                             .setLngLat(e.lngLat)
-                            .setHTML(polygonInfo.properties.nome)
+                            .setHTML("<div class='container'>"+"Altura de emissão: "+ polygonInfo.properties.altura_emi + "<br>" +
+                                "Area de emissão: "+ polygonInfo.properties.area_emi + "<br>" + 
+                                "Altura do Terreno: "+ polygonInfo.properties.altura_terro+"<div>")
                             .addTo(map);
                         console.log(polygonInfo.properties)
 
@@ -264,16 +310,24 @@
                     console.error('Erro ao obter item:', error);
                 });
         });
-        
+
+        // ----------------------- Hover State ----------------------------------------
+
+                //desenvolver mais tarde
 
 
         // ----------------------- Criando a area -------------------------------------
 
 
         map.on('draw.create', function(e) {
-            // sourceMapa.push(mapData)
-            console.log(e.features[0])
             var data = e.features[0]
+
+            data.properties['altura_emi'] = alt_emi.value;
+            data.properties['area_emi'] = area_emi.value;
+            data.properties['altura_terro'] = alt_terro.value;
+
+            polygonData = data
+            console.log(polygonData)
 
             map.addSource(e.features[0].id, {
                 'type': 'geojson',
@@ -290,8 +344,9 @@
         map.on('draw.update', function(e) {
             var data = e.features[0]
 
-            data.properties['nome'] = nome.value;
-            data.properties['valor1'] = nome.value + 'valor 1';
+            data.properties['altura_emi'] = alt_emi.value;
+            data.properties['area_emi'] = area_emi.value;
+            data.properties['altura_terro'] = alt_terro.value;;
 
             polygonData = data
             
@@ -307,8 +362,15 @@
 
 
         map.on('draw.selectionchange', function(e){
-            polygonData = e.features[0]
+            if (e.features[0] != undefined){
+            var data = e.features[0]
 
+            data.properties['altura_emi'] = alt_emi.value;
+            data.properties['area_emi'] = area_emi.value;
+            data.properties['altura_terro'] = alt_terro.value;
+
+            polygonData = data
+            }
             console.log(polygonData)
         })
 

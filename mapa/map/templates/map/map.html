@@ -66,7 +66,7 @@
     
         .flex-center {
             position: absolute;
-            display: flex;
+            
             justify-content: center;
             align-items: center;
         }
@@ -144,14 +144,34 @@
     <div id="map">
         <div id="left" class="sidebar flex-center left collapsed">
             <div class="sidebar-content rounded-rect flex-center">
-                <div class="container" >
-                    <p>Altura de emissão</p><input type="text" id="alt_emi">
-                    <p>Area de emissão</p><input type="text" id="area_emi">
-                    <p>Altura de terreno</p><input type="text" id="alt_terro"><br>
-                    <button type="submit" id="postar">Salvar</button>
-                    <button type="submit" id="enviar">Carregar</button>
-
-                </div>
+                <div class="container tab">
+                    <button class="tablinks" onclick="openCity(event, 'London')">London</button>
+                    <button class="tablinks" onclick="openCity(event, 'Paris')">Paris</button>
+                    <button class="tablinks" onclick="openCity(event, 'Tokyo')">Tokyo</button>
+                    <button class="tablinks" type="submit" id="enviar">Reload</button>
+                  </div>
+                  
+                  <!-- Tab content -->
+                  <div id="London" class="tabcontent">
+                    <div class="container" >
+                        <p>Altura de emissão</p><input type="text" id="alt_emi">
+                        <p>Area de emissão</p><input type="text" id="area_emi">
+                        <p>Altura de terreno</p><input type="text" id="alt_terro"><br>
+                        <button type="submit" id="postar">Salvar</button>
+                        
+    
+                    </div>
+                  </div>
+                  
+                  <div id="Paris" class="tabcontent">
+                    <h3>Paris</h3>
+                    <p>Paris is the capital of France.</p>
+                  </div>
+                  
+                  <div id="Tokyo" class="tabcontent">
+                    <h3>Tokyo</h3>
+                    <p>Tokyo is the capital of Japan.</p>
+                  </div>
 
                 <div
                     class="sidebar-toggle rounded-rect left"
@@ -180,6 +200,29 @@
         MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
         MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group'
 
+        // ------------------------ Tab Javascript --------------------------------------
+
+        function openCity(evt, cityName) {
+            // Declare all variables
+            var i, tabcontent, tablinks;
+
+            // Get all elements with class="tabcontent" and hide them
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Get all elements with class="tablinks" and remove the class "active"
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(cityName).style.display = "block";
+            evt.currentTarget.className += " active";
+            } 
+
         // ------------------------ Criação do Mapa -------------------------------------
 
         const map = new maplibregl.Map({
@@ -194,10 +237,11 @@
         // ----------------------- Criando Mapbox ------------------------------------
 
                 var draw = new MapboxDraw({
-            displayControlsDefault: true,
+            displayControlsDefault: false,
             controls: {
                 polygon: true,
                 point: true,
+                line: true,
                 trash: true
             }
         });
@@ -320,11 +364,13 @@
 
 
         map.on('draw.create', function(e) {
+            // if e.features.geometry == polygon
             var data = e.features[0]
 
             data.properties['altura_emi'] = alt_emi.value;
             data.properties['area_emi'] = area_emi.value;
             data.properties['altura_terro'] = alt_terro.value;
+            
 
             polygonData = data
             console.log(polygonData)

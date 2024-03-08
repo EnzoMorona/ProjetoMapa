@@ -156,10 +156,27 @@
 
                     <div id="London" class="tabcontent">
                         <div class="container" >
-                            <p>Aremis</p><input type="text" id="alt_emi">
-                            <p>Relhgt</p><input type="text" id="area_emi">
-                            <p>z0</p><input type="text" id="alt_terro"><br>
+                            <select name="type-polygon" id="type-polygon">
+                                <option value="volume">Volume</option>
+                                <option value="area" selected>Area</option>
+
+                              </select>
+
+                              <div id="volume-fields" style="display: none;">
+                                <!-- Campos para Volume -->
+                                <p>Vlemis</p><input type="text" id="em_vol">
+                                <p>Relhgt</p><input type="text" id="rel_vol">
+                                <p>Syiniti</p><input type="text" id="sy_vol">
+                                <p>Sziniti</p><input type="text" id="sz_vol">
+                                <p>z0</p><input type="text" id="z0_vol"><br>
+                            </div>
                             
+                            <div id="area-fields" style="display: none;">
+                                <!-- Campos para Área -->
+                                <p>Aremis</p><input type="text" id="alt_emi">
+                                <p>Relhgt</p><input type="text" id="area_emi">
+                                <p>z0</p><input type="text" id="alt_terro"><br>
+                            </div>
                             
         
                         </div>
@@ -245,6 +262,24 @@
         MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
         MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group'
 
+        // ------------------------ Select Options change -------------------------------
+
+        
+        document.getElementById('type-polygon').addEventListener('change', function() {
+            var selectedOption = this.value;
+            
+            // Ocultar todos os campos
+            document.getElementById('volume-fields').style.display = 'none';
+            document.getElementById('area-fields').style.display = 'none';
+
+            // Mostrar os campos relevantes com base na opção selecionada
+            if (selectedOption === 'volume') {
+                document.getElementById('volume-fields').style.display = 'block';
+            } else if (selectedOption === 'area') {
+                document.getElementById('area-fields').style.display = 'block';
+            }
+        });
+
         // ------------------------ Tab Javascript --------------------------------------
 
         function openCity(evt, cityName) {
@@ -329,36 +364,106 @@
 
                     console.log(polygonList)
 
-                    var polygons = polygonList.filter(feature => feature.geometry.type === 'Polygon');
-                       console.log('Polígonos:', polygons);
+                    var polygons_itens = polygonList.filter(
+                        feature => feature.geometry.type === 'Polygon');
+                       
+                    var polygons_volume = polygons_itens.filter(
+                        feature => feature.properties.type === 'volume');
+                    console.log('Área:', polygons_volume);
+
+                    var polygons_area = polygons_itens.filter(
+                        feature => feature.properties.type === 'area');
+                    console.log('Área:', polygons_area);
 
                     // Filtrar linhas
-                    var lines = polygonList.filter(feature => feature.geometry.type === 'LineString');
+                    var lines = polygonList.filter(
+                        feature => feature.geometry.type === 'LineString');
                     console.log('Linhas:', lines);
 
                     // Filtrar pontos
-                    var points = polygonList.filter(feature => feature.geometry.type === 'Point');
+                    var points = polygonList.filter(
+                        feature => feature.geometry.type === 'Point');
                     console.log('Pontos:', points);
 
                     
 
-                    map.addSource('created-maps', {
+                    map.addSource('lines-maps', {
                         'type': 'geojson',
                         'data': {
                             'type': 'FeatureCollection',
-                            'features': polygons,lines,points
+                            'features': lines
+                        },
+                    },
+                    )
+                    map.addSource('points-maps', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': points
+                        },
+                    },
+                    )
+                    map.addSource('volume-maps', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': polygons_volume
+                        },
+                    },
+                    )
+                    map.addSource('area-maps', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': polygons_area
                         },
                     },
                     )
                     
                     map.addLayer({
-                        'id': 'poligono',
-                        'type': 'fill',
-                        'source': 'created-maps',
+                        'id': 'line-layer',
+                        'type': 'line',
+                        'source': 'lines-maps',
                         'layout': {},
                         'paint': {
-                            'fill-color': '#088 ',
-                            'fill-opacity': 0.5
+                            'line-color': '#088 ',
+                            'line-width': 5 
+                        }
+
+                    });
+
+                    map.addLayer({
+                        'id': 'point-layer',
+                        'type': 'circle',
+                        'source': 'points-maps',
+                        'layout': {},
+                        'paint': {
+                            'circle-radius': 8, // Raio do círculo em pixels
+                            'circle-color': '#ff0000' // Cor do círculo
+                        }
+
+                    });
+                                        
+                    map.addLayer({
+                        'id': 'area-layer',
+                        'type': 'fill',
+                        'source': 'area-maps',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#008000 ',
+                            'fill-opacity': 0.5 
+                        }
+
+                    });
+
+                    map.addLayer({
+                        'id': 'volume-layer',
+                        'type': 'fill',
+                        'source': 'volume-maps',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#ff0 ',
+                            'fill-opacity': 0.5 
                         }
 
                     });
@@ -371,22 +476,81 @@
 
 
         // ----------------------- Mostrar Info -------------------------------
+        });
 
-                map.on('click', 'poligono', (e) => {
 
-                    polygonInfo = e.features[0]
+            map.on('click', 'line-layer', (e) => {
 
-                        new maplibregl.Popup()
-                            .setLngLat(e.lngLat)
-                            .setHTML("<div class='container'>"+"Altura de emissão: "+ polygonInfo.properties.altura_emi + "<br>" +
-                                "Area de emissão: "+ polygonInfo.properties.area_emi + "<br>" + 
-                                "Altura do Terreno: "+ polygonInfo.properties.altura_terro+"<div>")
-                            .addTo(map);
-                        console.log(polygonInfo.properties)
+                polygonInfo = e.features[0]
 
-                    });
+                    new maplibregl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML("<div class='container'>"+
+                            "Lnemis: "+ polygonInfo.properties.Lnemis + "<br>" +
+                            "Relhgt: "+ polygonInfo.properties.Relhgt + "<br>" + 
+                            "Width: "+ polygonInfo.properties.Width + "<br>" +
+                            "Sziniti: " + polygonInfo.properties.Sziniti + "<br>" +
+                            "z0: " + polygonInfo.properties.z0 +"<div>")
+                        .addTo(map);
+                    console.log(polygonInfo.properties)
 
-            });
+                });
+
+            map.on('click', 'point-layer', (e) => {
+
+                polygonInfo = e.features[0]
+
+                    new maplibregl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML("<div class='container'>"+
+                            "Source: "+ polygonInfo.properties.Source + "<br>" +
+                            "Long: "+ polygonInfo.properties.Long + "<br>" + 
+                            "Lat: "+ polygonInfo.properties.Lat + "<br>" +
+                            "Altitude: " + polygonInfo.properties.Altitude + "<br>" +
+                            "StackHeight: " + polygonInfo.properties.StackHeight + "<br>" +
+                            "Temperature: " + polygonInfo.properties.Temperature + "<br>" +
+                            "Velocity: " + polygonInfo.properties.Velocity + "<br>" +
+                            "Diameter: " + polygonInfo.properties.Diameter + "<br>" +
+                            "Emission: " + polygonInfo.properties.Emission +"<div>")
+                        .addTo(map);
+                    console.log(polygonInfo.properties)
+
+                });    
+
+            map.on('click', 'area-layer', (e) => {
+
+                polygonInfo = e.features[0]
+
+                    new maplibregl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML("<div class='container'>"+
+                            "Lnemis: "+ polygonInfo.properties.Aremis + "<br>" +
+                            "Relhgt: "+ polygonInfo.properties.Relhgt + "<br>" + 
+                            "Width: "+ polygonInfo.properties.z0 +"<div>")
+                        .addTo(map);
+                    console.log(polygonInfo.properties)
+
+                }); 
+                
+            map.on('click', 'volume-layer', (e) => {
+
+                polygonInfo = e.features[0]
+
+                    new maplibregl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML("<div class='container'>"+
+                            "Lnemis: "+ polygonInfo.properties.Vlemis + "<br>" +
+                            "Relhgt: "+ polygonInfo.properties.Relhgt + "<br>" + 
+                            "Width: "+ polygonInfo.properties.Syiniti + "<br>" +
+                            "Sziniti: " + polygonInfo.properties.Sziniti + "<br>" +
+                            "Long: " + polygonInfo.properties.Long + "<br>" +
+                            "Lat: " + polygonInfo.properties.Lat + "<br>" +
+                            "z0: " + polygonInfo.properties.z0 +"<div>")
+                        .addTo(map);
+                    console.log(polygonInfo.properties)
+
+                });
+
 
         // ----------------------- Recarregar Polygons ------------------------------
 
@@ -402,9 +566,42 @@
                     polygonList = polygonList.concat(features);
                     console.log(polygonList);
 
-                    map.getSource('created-maps').setData({
+                    var polygons_itens = polygonList.filter(
+                        feature => feature.geometry.type === 'Polygon');
+                       
+                    var polygons_volume = polygons_itens.filter(
+                        feature => feature.properties.type === 'volume');
+                    console.log('Área:', polygons_volume);
+
+                    var polygons_area = polygons_itens.filter(
+                        feature => feature.properties.type === 'area');
+                    console.log('Área:', polygons_area);
+
+                    // Filtrar linhas
+                    var lines = polygonList.filter(
+                        feature => feature.geometry.type === 'LineString');
+                    console.log('Linhas:', lines);
+
+                    // Filtrar pontos
+                    var points = polygonList.filter(
+                        feature => feature.geometry.type === 'Point');
+                    console.log('Pontos:', points);
+
+                    map.getSource('lines-maps').setData({
                         'type': 'FeatureCollection',
-                        'features': polygonList
+                        'features': lines
+                    });
+                    map.getSource('points-maps').setData({
+                        'type': 'FeatureCollection',
+                        'features': points
+                    });
+                    map.getSource('volume-maps').setData({
+                        'type': 'FeatureCollection',
+                        'features': polygons_volume
+                    });
+                    map.getSource('area-maps').setData({
+                        'type': 'FeatureCollection',
+                        'features': polygons_area
                     });
 
                 })
@@ -413,9 +610,19 @@
                 });
         });
 
-        // ----------------------- Hover State ----------------------------------------
+        // ----------------------- CALCULO DO MEIO DO POLYGON --------------------------
 
-                //desenvolver mais tarde
+        function calcularCentroPoligono(coordinates) {
+            let sumX = 0;
+            let sumY = 0;
+            for (let i = 0; i < coordinates.length; i++) {
+                sumX += coordinates[i][0];
+                sumY += coordinates[i][1];
+            }
+            const centerX = sumX / coordinates.length;
+            const centerY = sumY / coordinates.length;
+            return [centerX, centerY];
+        }
 
 
         // ----------------------- Criando a area -------------------------------------
@@ -426,11 +633,37 @@
         // --------------------------- POLYGON CREATE ----------------------------------    
 
             if (e.features[0].geometry.type == "Polygon"){
+
                 var data = e.features[0]
 
-                data.properties['Aremis'] = alt_emi.value;
-                data.properties['Relhgt'] = area_emi.value;
-                data.properties['z0'] = alt_terro.value;
+                        
+                    var selectedOption = document.getElementById('type-polygon').value;
+                    if (selectedOption === 'volume') {
+
+                        const coordinates = e.features[0].geometry.coordinates[0];
+                        const centroPoligono = calcularCentroPoligono(coordinates);
+                        const longitude = centroPoligono[0];
+                        const latitude = centroPoligono[1];
+
+                        data.properties['type'] = 'volume';
+                        data.properties['Vlemis'] = em_vol.value;
+                        data.properties['Relhgt'] = rel_vol.value;
+                        data.properties['Syiniti'] = sy_vol.value;
+                        data.properties['Sziniti'] = sz_vol.value;
+                        data.properties['Long'] = longitude
+                        data.properties['Lat'] = latitude
+                        data.properties['z0'] = z0_vol.value;
+
+                        
+
+                    } else if (selectedOption === 'area') {
+
+                        data.properties['type'] = 'area';
+                        data.properties['Aremis'] = alt_emi.value;
+                        data.properties['Relhgt'] = area_emi.value;
+                        data.properties['z0'] = alt_terro.value;
+
+                    }
                 
 
                 polygonData = data
@@ -516,20 +749,85 @@
         // ------------------------ MAP UPDATE ----------------------------------------------
 
         map.on('draw.update', function(e) {
-            var data = e.features[0]
+            if (e.features[0].geometry.type == "Polygon"){
 
-            data.properties['altura_emi'] = alt_emi.value;
-            data.properties['area_emi'] = area_emi.value;
-            data.properties['altura_terro'] = alt_terro.value;;
+                    var data = e.features[0]
 
-            polygonData = data
+                        
+                var selectedOption = document.getElementById('type-polygon').value;
+                if (selectedOption === 'volume') {
+
+                    const coordinates = e.features[0].geometry.coordinates[0];
+                    const centroPoligono = calcularCentroPoligono(coordinates);
+                    const longitude = centroPoligono[0];
+                    const latitude = centroPoligono[1];
+
+                    data.properties['type'] = 'volume';
+                    data.properties['Vlemis'] = em_vol.value;
+                    data.properties['Relhgt'] = rel_vol.value;
+                    data.properties['Syiniti'] = sy_vol.value;
+                    data.properties['Sziniti'] = sz_vol.value;
+                    data.properties['Long'] = longitude;
+                    data.properties['Lat'] = latitude;
+                    data.properties['z0'] = z0_vol.value;
+                    console.log(data)
+
+                } else if (selectedOption === 'area') {
+
+                    data.properties['type'] = 'area';
+                    data.properties['Aremis'] = alt_emi.value;
+                    data.properties['Relhgt'] = area_emi.value;
+                    data.properties['z0'] = alt_terro.value;
+                    console.log(data)
+                }
             
-            map.setPaintProperty('map-layer', 'fill-color', {
-                    type: 'identity',
-                    property: 'name'
-            },
+                // --------------------------- POINT UPDATE ----------------------------------    
+
+                else if (e.features[0].geometry.type == "Point"){
+
+                    var data = e.features[0]
+                    var coords = e.features[0].geometry
+                    var lng = coords.coordinates[0]
+                    var lat = coords.coordinates[1]
+                    
+
+
+                    data.properties['Source'] = font_point.value;
+                    data.properties['Long'] = lng;
+                    data.properties['Lat'] = lat;
+                    data.properties['Altitude'] = alt_point.value;
+                    data.properties['StackHeight'] = stack_point.value;
+                    data.properties['Temperature'] = temp_point.value;
+                    data.properties['Velocity'] = vel_point.value;
+                    data.properties['Diameter'] = dm_point.value;
+                    data.properties['Emission'] = em_point.value;
+                    console.log(data)
+                }
+                // --------------------------- LINE UPDATE ----------------------------------
+
+                else if (e.features[0].geometry.type == "LineString"){
+
+                var data = e.features[0]
+
+                data.properties['Lnemis'] = em_line.value;
+                data.properties['Relhgt'] = alt_line.value;
+                data.properties['Width'] = lar_line.value;
+                data.properties['Sziniti'] = sz_line.value;
+                data.properties['z0'] = z0_line.value;
+                console.log(data)
+
+                polygonData = data
                 
-            )
+
+                } 
+
+                map.setPaintProperty('map-layer', 'fill-color', {
+                        type: 'identity',
+                        property: 'name'
+                })
+
+            }   
+
         });
 
         // ------------------------ ON CLICK FEATURES -------------------------------------
@@ -538,12 +836,36 @@
         map.on('draw.selectionchange', function(e){
             if (e.features[0] != undefined){
                 if (e.features[0].geometry.type == "Polygon"){
-                var data = e.features[0]
 
-                data.properties['Aremis'] = alt_emi.value;
-                data.properties['Relhgt'] = area_emi.value;
-                data.properties['z0'] = alt_terro.value;
-                
+                    var data = e.features[0]
+                        
+                    var selectedOption = document.getElementById('type-polygon').value;
+                    if (selectedOption === 'volume') {
+
+                        const coordinates = e.features[0].geometry.coordinates[0];
+                        const centroPoligono = calcularCentroPoligono(coordinates);
+                        const longitude = centroPoligono[0];
+                        const latitude = centroPoligono[1];
+
+                        data.properties['type'] = 'volume';
+                        data.properties['Vlemis'] = em_vol.value;
+                        data.properties['Relhgt'] = rel_vol.value;
+                        data.properties['Syiniti'] = sy_vol.value;
+                        data.properties['Sziniti'] = sz_vol.value;
+                        data.properties['Long'] = longitude
+                        data.properties['Lat'] = latitude
+                        data.properties['z0'] = z0_vol.value;
+
+                        
+
+                    } else if (selectedOption === 'area') {
+
+                        data.properties['type'] = 'area';
+                        data.properties['Aremis'] = alt_emi.value;
+                        data.properties['Relhgt'] = area_emi.value;
+                        data.properties['z0'] = alt_terro.value;
+
+                    }
 
                 polygonData = data
                 }
@@ -554,7 +876,7 @@
                 var coords = e.features[0].geometry
                 var lng = coords.coordinates[0]
                 var lat = coords.coordinates[1]
-                console.log(e.features[0])
+                
 
 
                 data.properties['Source'] = font_point.value;

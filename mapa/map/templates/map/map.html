@@ -84,7 +84,7 @@
             width: 95%;
             height: 95%;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 20px;
+            font-size: 16px;
             color: gray;
         }
     
@@ -143,44 +143,74 @@
 
     <div id="map">
         <div id="left" class="sidebar flex-center left collapsed">
+            
             <div class="sidebar-content rounded-rect flex-center">
+                
                 <div class="container tab">
                     <button class="tablinks" onclick="openCity(event, 'London')">London</button>
                     <button class="tablinks" onclick="openCity(event, 'Paris')">Paris</button>
                     <button class="tablinks" onclick="openCity(event, 'Tokyo')">Tokyo</button>
                     <button class="tablinks" type="submit" id="enviar">Reload</button>
-                  </div>
-                  
-                  <!-- Tab content -->
-                  <div id="London" class="tabcontent">
-                    <div class="container" >
-                        <p>Altura de emissão</p><input type="text" id="alt_emi">
-                        <p>Area de emissão</p><input type="text" id="area_emi">
-                        <p>Altura de terreno</p><input type="text" id="alt_terro"><br>
-                        <button type="submit" id="postar">Salvar</button>
-                        
-    
-                    </div>
-                  </div>
-                  
-                  <div id="Paris" class="tabcontent">
-                    <h3>Paris</h3>
-                    <p>Paris is the capital of France.</p>
-                  </div>
-                  
-                  <div id="Tokyo" class="tabcontent">
-                    <h3>Tokyo</h3>
-                    <p>Tokyo is the capital of Japan.</p>
-                  </div>
+                    
 
-                <div
-                    class="sidebar-toggle rounded-rect left"
-                    onclick="toggleSidebar('left')"
-                >
-                    &rarr;
+
+                    <div id="London" class="tabcontent">
+                        <div class="container" >
+                            <p>Aremis</p><input type="text" id="alt_emi">
+                            <p>Relhgt</p><input type="text" id="area_emi">
+                            <p>z0</p><input type="text" id="alt_terro"><br>
+                            
+                            
+        
+                        </div>
+                      </div>
+
+
+                      
+                      <div id="Paris" class="tabcontent">
+                        <div class="container" >
+                            <p>Source</p><input type="text" id="font_point">
+                            <p>Altitude</p><input type="text" id="alt_point">
+                            <p>StackHeight</p><input type="text" id="stack_point">
+                            <p>Temperature</p><input type="text" id="temp_point">
+                            <p>Velocity</p><input type="text" id="vel_point">
+                            <p>Diameter</p><input type="text" id="dm_point">
+                            <p>Emission</p><input type="text" id="em_point"><br>
+                            
+                            
+        
+                        </div>
+                      </div>
+
+
+                      
+                      <div id="Tokyo" class="tabcontent">
+                        <div class="container" >
+                            <p>Lnemis</p><input type="text" id="em_line">
+                            <p>Relhgt</p><input type="text" id="alt_line">
+                            <p>Width</p><input type="text" id="lar_line">
+                            <p>Sziniti</p><input type="text" id="sz_line">
+                            <p>z0</p><input type="text" id="z0_line"><br>
+                            
+                            
+        
+                        </div>
+                      </div>
+                      <button type="submit" id="postar">Salvar</button>
+
+                      <div
+                      class="sidebar-toggle rounded-rect left"
+                      onclick="toggleSidebar('left')"
+                  >
+                      &rarr;
                 </div>
+
+                </div>
+                
             </div>
+            
         </div>
+        
     </div>
 
 
@@ -194,6 +224,21 @@
         var alt_emi = document.getElementById('alt_emi')
         var area_emi = document.getElementById('area_emi')
         var alt_terro = document.getElementById('alt_terro')
+
+        var font_point = document.getElementById('font_point')
+        var alt_point = document.getElementById('alt_point')
+        var stack_point = document.getElementById('stack_point')
+        var temp_point = document.getElementById('temp_point')
+        var vel_point = document.getElementById('vel_point')
+        var dm_point = document.getElementById('dm_point')
+        var em_point = document.getElementById('em_point')
+
+        var em_line = document.getElementById('em_line')
+        var alt_line = document.getElementById('alt_line')
+        var lar_line = document.getElementById('lar_line')
+        var sz_line = document.getElementById('sz_line')
+        var z0_line = document.getElementById('z0_line')
+        
    
 
         MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
@@ -241,7 +286,7 @@
             controls: {
                 polygon: true,
                 point: true,
-                line: true,
+                line_string: true,
                 trash: true
             }
         });
@@ -284,12 +329,25 @@
 
                     console.log(polygonList)
 
+                    var polygons = polygonList.filter(feature => feature.geometry.type === 'Polygon');
+                       console.log('Polígonos:', polygons);
+
+                    // Filtrar linhas
+                    var lines = polygonList.filter(feature => feature.geometry.type === 'LineString');
+                    console.log('Linhas:', lines);
+
+                    // Filtrar pontos
+                    var points = polygonList.filter(feature => feature.geometry.type === 'Point');
+                    console.log('Pontos:', points);
+
+                    
+
                     map.addSource('created-maps', {
                         'type': 'geojson',
                         'data': {
                             'type': 'FeatureCollection',
-                            'features': polygonList
-                        }
+                            'features': polygons,lines,points
+                        },
                     },
                     )
                     
@@ -364,28 +422,98 @@
 
 
         map.on('draw.create', function(e) {
-            // if e.features.geometry == polygon
-            var data = e.features[0]
 
-            data.properties['altura_emi'] = alt_emi.value;
-            data.properties['area_emi'] = area_emi.value;
-            data.properties['altura_terro'] = alt_terro.value;
-            
+        // --------------------------- POLYGON CREATE ----------------------------------    
 
-            polygonData = data
-            console.log(polygonData)
+            if (e.features[0].geometry.type == "Polygon"){
+                var data = e.features[0]
 
-            map.addSource(e.features[0].id, {
+                data.properties['Aremis'] = alt_emi.value;
+                data.properties['Relhgt'] = area_emi.value;
+                data.properties['z0'] = alt_terro.value;
+                
+
+                polygonData = data
+                console.log(e.features[0])
+
+                map.addSource(e.features[0].id, {
                 'type': 'geojson',
                 'data': {
                     'type': 'FeatureCollection',
                     'features': [
                         data
                     ]
-                }
-            })
+                    }
+                })
+            }
+        // --------------------------- POINT CREATE ----------------------------------    
+            
+            else if (e.features[0].geometry.type == "Point"){
+                
+                var data = e.features[0]
+                var coords = e.features[0].geometry
+                var lng = coords.coordinates[0]
+                var lat = coords.coordinates[1]
+                console.log(e.features[0])
+
+
+                data.properties['Source'] = font_point.value;
+                data.properties['Long'] = lng;
+                data.properties['Lat'] = lat;
+                data.properties['Altitude'] = alt_point.value;
+                data.properties['StackHeight'] = stack_point.value;
+                data.properties['Temperature'] = temp_point.value;
+                data.properties['Velocity'] = vel_point.value;
+                data.properties['Diameter'] = dm_point.value;
+                data.properties['Emission'] = em_point.value;
+
+
+                polygonData = data
+                
+
+                map.addSource(e.features[0].id, {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        data
+                    ]
+                    }
+                })
+
+            }
+        // --------------------------- LINE CREATE ----------------------------------
+
+            else if (e.features[0].geometry.type == "LineString"){
+
+                var data = e.features[0]
+
+                data.properties['Lnemis'] = em_line.value;
+                data.properties['Relhgt'] = alt_line.value;
+                data.properties['Width'] = lar_line.value;
+                data.properties['Sziniti'] = sz_line.value;
+                data.properties['z0'] = z0_line.value;
+                console.log(e.features[0])
+
+                polygonData = data
+                
+
+                map.addSource(e.features[0].id, {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        data
+                    ]
+                    }
+                })
+            }
+            
+
 
         });
+    
+        // ------------------------ MAP UPDATE ----------------------------------------------
 
         map.on('draw.update', function(e) {
             var data = e.features[0]
@@ -409,15 +537,54 @@
 
         map.on('draw.selectionchange', function(e){
             if (e.features[0] != undefined){
-            var data = e.features[0]
+                if (e.features[0].geometry.type == "Polygon"){
+                var data = e.features[0]
 
-            data.properties['altura_emi'] = alt_emi.value;
-            data.properties['area_emi'] = area_emi.value;
-            data.properties['altura_terro'] = alt_terro.value;
+                data.properties['Aremis'] = alt_emi.value;
+                data.properties['Relhgt'] = area_emi.value;
+                data.properties['z0'] = alt_terro.value;
+                
 
-            polygonData = data
+                polygonData = data
+                }
+
+                else if (e.features[0].geometry.type == "Point"){
+                
+                var data = e.features[0]
+                var coords = e.features[0].geometry
+                var lng = coords.coordinates[0]
+                var lat = coords.coordinates[1]
+                console.log(e.features[0])
+
+
+                data.properties['Source'] = font_point.value;
+                data.properties['Long'] = lng;
+                data.properties['Lat'] = lat;
+                data.properties['Altitude'] = alt_point.value;
+                data.properties['StackHeight'] = stack_point.value;
+                data.properties['Temperature'] = temp_point.value;
+                data.properties['Velocity'] = vel_point.value;
+                data.properties['Diameter'] = dm_point.value;
+                data.properties['Emission'] = em_point.value;
+
+
+                polygonData = data
+                }
+                else if (e.features[0].geometry.type == "LineString"){
+
+                var data = e.features[0]
+
+                data.properties['Lnemis'] = em_line.value;
+                data.properties['Relhgt'] = alt_line.value;
+                data.properties['Width'] = lar_line.value;
+                data.properties['Sziniti'] = sz_line.value;
+                data.properties['z0'] = z0_line.value;
+                console.log(e.features[0])
+
+                polygonData = data
+                }
             }
-            console.log(polygonData)
+            
         })
 
 

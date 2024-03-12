@@ -147,9 +147,9 @@
             <div class="sidebar-content rounded-rect flex-center">
                 
                 <div class="container tab">
-                    <button class="tablinks" onclick="openCity(event, 'London')">London</button>
-                    <button class="tablinks" onclick="openCity(event, 'Paris')">Paris</button>
-                    <button class="tablinks" onclick="openCity(event, 'Tokyo')">Tokyo</button>
+                    <button class="tablinks" onclick="openCity(event, 'London')">A/Vol</button>
+                    <button class="tablinks" onclick="openCity(event, 'Paris')">Ponto</button>
+                    <button class="tablinks" onclick="openCity(event, 'Tokyo')">Linha</button>
                     <button class="tablinks" type="submit" id="enviar">Reload</button>
                     
 
@@ -214,6 +214,7 @@
                         </div>
                       </div>
                       <button type="submit" id="postar">Salvar</button>
+                      <button id='delete-button'>Excluir</button>
 
                       <div
                       class="sidebar-toggle rounded-rect left"
@@ -235,6 +236,7 @@
 
         // ----------------------- Inicio do Script ------------------------------------
         
+        var polygonDelete = null
         var polygonInfo = null
         var polygonList = []
         let polygonData = null
@@ -427,7 +429,8 @@
                         'layout': {},
                         'paint': {
                             'line-color': '#088 ',
-                            'line-width': 5 
+                            'line-width': 4 ,
+                            'line-opacity': 0.5
                         }
 
                     });
@@ -439,7 +442,8 @@
                         'layout': {},
                         'paint': {
                             'circle-radius': 8, // Raio do círculo em pixels
-                            'circle-color': '#ff0000' // Cor do círculo
+                            'circle-color': '#ff0000', // Cor do círculo
+                            'circle-opacity': 0.5
                         }
 
                     });
@@ -450,8 +454,8 @@
                         'source': 'area-maps',
                         'layout': {},
                         'paint': {
-                            'fill-color': '#008000 ',
-                            'fill-opacity': 0.5 
+                            'fill-color': '#ff0 ',
+                            'fill-opacity': 0.3
                         }
 
                     });
@@ -462,8 +466,8 @@
                         'source': 'volume-maps',
                         'layout': {},
                         'paint': {
-                            'fill-color': '#ff0 ',
-                            'fill-opacity': 0.5 
+                            'fill-color': '#0000FF ',
+                            'fill-opacity': 0.3 
                         }
 
                     });
@@ -482,6 +486,7 @@
             map.on('click', 'line-layer', (e) => {
 
                 polygonInfo = e.features[0]
+                polygonDelete = e.features[0]
 
                     new maplibregl.Popup()
                         .setLngLat(e.lngLat)
@@ -492,13 +497,14 @@
                             "Sziniti: " + polygonInfo.properties.Sziniti + "<br>" +
                             "z0: " + polygonInfo.properties.z0 +"<div>")
                         .addTo(map);
-                    console.log(polygonInfo.properties)
+                    console.log(polygonDelete)
 
                 });
 
             map.on('click', 'point-layer', (e) => {
 
                 polygonInfo = e.features[0]
+                polygonDelete = e.features[0]
 
                     new maplibregl.Popup()
                         .setLngLat(e.lngLat)
@@ -520,11 +526,12 @@
             map.on('click', 'area-layer', (e) => {
 
                 polygonInfo = e.features[0]
+                polygonDelete = e.features[0]
 
                     new maplibregl.Popup()
                         .setLngLat(e.lngLat)
                         .setHTML("<div class='container'>"+
-                            "Lnemis: "+ polygonInfo.properties.Aremis + "<br>" +
+                            "Aremis: "+ polygonInfo.properties.Aremis + "<br>" +
                             "Relhgt: "+ polygonInfo.properties.Relhgt + "<br>" + 
                             "Width: "+ polygonInfo.properties.z0 +"<div>")
                         .addTo(map);
@@ -535,6 +542,7 @@
             map.on('click', 'volume-layer', (e) => {
 
                 polygonInfo = e.features[0]
+                polygonDelete = e.features[0]
 
                     new maplibregl.Popup()
                         .setLngLat(e.lngLat)
@@ -632,9 +640,11 @@
 
         // --------------------------- POLYGON CREATE ----------------------------------    
 
+
             if (e.features[0].geometry.type == "Polygon"){
 
                 var data = e.features[0]
+                
 
                         
                     var selectedOption = document.getElementById('type-polygon').value;
@@ -645,6 +655,7 @@
                         const longitude = centroPoligono[0];
                         const latitude = centroPoligono[1];
 
+                        data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'volume';
                         data.properties['Vlemis'] = em_vol.value;
                         data.properties['Relhgt'] = rel_vol.value;
@@ -658,6 +669,7 @@
 
                     } else if (selectedOption === 'area') {
 
+                        data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'area';
                         data.properties['Aremis'] = alt_emi.value;
                         data.properties['Relhgt'] = area_emi.value;
@@ -689,7 +701,7 @@
                 var lat = coords.coordinates[1]
                 console.log(e.features[0])
 
-
+                data.properties['id'] = e.features[0].id
                 data.properties['Source'] = font_point.value;
                 data.properties['Long'] = lng;
                 data.properties['Lat'] = lat;
@@ -721,6 +733,7 @@
 
                 var data = e.features[0]
 
+                data.properties['id'] = e.features[0].id
                 data.properties['Lnemis'] = em_line.value;
                 data.properties['Relhgt'] = alt_line.value;
                 data.properties['Width'] = lar_line.value;
@@ -749,10 +762,12 @@
         // ------------------------ MAP UPDATE ----------------------------------------------
 
         map.on('draw.update', function(e) {
+
+            
             if (e.features[0].geometry.type == "Polygon"){
 
                     var data = e.features[0]
-
+                    
                         
                 var selectedOption = document.getElementById('type-polygon').value;
                 if (selectedOption === 'volume') {
@@ -762,6 +777,7 @@
                     const longitude = centroPoligono[0];
                     const latitude = centroPoligono[1];
 
+                    data.properties['id'] = e.features[0].id
                     data.properties['type'] = 'volume';
                     data.properties['Vlemis'] = em_vol.value;
                     data.properties['Relhgt'] = rel_vol.value;
@@ -774,6 +790,7 @@
 
                 } else if (selectedOption === 'area') {
 
+                    data.properties['id'] = e.features[0].id
                     data.properties['type'] = 'area';
                     data.properties['Aremis'] = alt_emi.value;
                     data.properties['Relhgt'] = area_emi.value;
@@ -791,7 +808,7 @@
                     var lat = coords.coordinates[1]
                     
 
-
+                    data.properties['id'] = e.features[0].id
                     data.properties['Source'] = font_point.value;
                     data.properties['Long'] = lng;
                     data.properties['Lat'] = lat;
@@ -809,6 +826,7 @@
 
                 var data = e.features[0]
 
+                data.properties['id'] = e.features[0].id
                 data.properties['Lnemis'] = em_line.value;
                 data.properties['Relhgt'] = alt_line.value;
                 data.properties['Width'] = lar_line.value;
@@ -835,10 +853,15 @@
 
         map.on('draw.selectionchange', function(e){
             if (e.features[0] != undefined){
+
+                polygonDelete = e.features[0]
+                
+
                 if (e.features[0].geometry.type == "Polygon"){
 
                     var data = e.features[0]
-                        
+
+                      
                     var selectedOption = document.getElementById('type-polygon').value;
                     if (selectedOption === 'volume') {
 
@@ -846,7 +869,8 @@
                         const centroPoligono = calcularCentroPoligono(coordinates);
                         const longitude = centroPoligono[0];
                         const latitude = centroPoligono[1];
-
+                        
+                        data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'volume';
                         data.properties['Vlemis'] = em_vol.value;
                         data.properties['Relhgt'] = rel_vol.value;
@@ -860,10 +884,12 @@
 
                     } else if (selectedOption === 'area') {
 
+                        data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'area';
                         data.properties['Aremis'] = alt_emi.value;
                         data.properties['Relhgt'] = area_emi.value;
                         data.properties['z0'] = alt_terro.value;
+                        
 
                     }
 
@@ -878,7 +904,7 @@
                 var lat = coords.coordinates[1]
                 
 
-
+                data.properties['id'] = e.features[0].id
                 data.properties['Source'] = font_point.value;
                 data.properties['Long'] = lng;
                 data.properties['Lat'] = lat;
@@ -896,6 +922,7 @@
 
                 var data = e.features[0]
 
+                data.properties['id'] = e.features[0].id
                 data.properties['Lnemis'] = em_line.value;
                 data.properties['Relhgt'] = alt_line.value;
                 data.properties['Width'] = lar_line.value;
@@ -945,7 +972,32 @@
             console.log('Botão de envio clicado!')
         });
         
+        //------------------------- EXCLUIR POLYGON ---------------------------------------
 
+        const deleteButton = document.getElementById('delete-button');
+            console.log(polygonDelete)
+        deleteButton.addEventListener('click', function() {
+            var polygonId = polygonDelete.properties.id;
+
+            fetch(`/delete-polygon/`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body:JSON.stringify(polygonId)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Polígono excluído com sucesso.');
+                } else {
+                    console.error('Falha ao excluir polígono:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao excluir polígono:', error);
+            });
+        });
 
         // ------------------------ Função da SIDE BAR ------------------------------------
 

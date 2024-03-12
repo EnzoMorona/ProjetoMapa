@@ -44,4 +44,31 @@ def obter_item(request):
         return JsonResponse({'erro': 'Método não permitido'}, status=405)
     
 
+def delete_polygon(request):
+    if request.method == 'POST':
+        try:
+            geojson_data = json.loads(request.body)            
+            print(geojson_data)
+            # Obtendo todos os polígonos do banco de dados
+            db_posts = Post.objects.all()
+            id: str
+            # Lista para armazenar os valores da chave 'id' dentro dos JSONs
+            
 
+            # Iterar sobre todos os objetos Post
+            for post in db_posts:
+                # Extrair o valor da chave 'id' do JSON e adicioná-lo à lista
+                if (post.json['id'] == geojson_data):
+                    item_id = post.json
+                    post_delete = Post.objects.get(json = item_id)
+                    post_delete.delete()
+                    print(item_id)
+                    
+                # Verificando se há uma propriedade de identificação única nos polígonos do GeoJSON
+
+
+            return JsonResponse({'message': 'Polígonos excluídos com sucesso.'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)

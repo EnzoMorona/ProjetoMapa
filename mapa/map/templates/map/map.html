@@ -239,6 +239,8 @@
         var polygonDelete = null
         var polygonInfo = null
         var polygonList = []
+        var polygonVolume = []
+        var polygonArea = []
         let polygonData = null
         var alt_emi = document.getElementById('alt_emi')
         var area_emi = document.getElementById('area_emi')
@@ -654,6 +656,7 @@
                         const centroPoligono = calcularCentroPoligono(coordinates);
                         const longitude = centroPoligono[0];
                         const latitude = centroPoligono[1];
+                        
 
                         data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'volume';
@@ -664,7 +667,8 @@
                         data.properties['Long'] = longitude
                         data.properties['Lat'] = latitude
                         data.properties['z0'] = z0_vol.value;
-
+                        polygonVolume.push(e.features[0].id)
+                        
                         
 
                     } else if (selectedOption === 'area') {
@@ -674,6 +678,8 @@
                         data.properties['Aremis'] = alt_emi.value;
                         data.properties['Relhgt'] = area_emi.value;
                         data.properties['z0'] = alt_terro.value;
+                        polygonArea.push(e.features[0].id)
+                    
 
                     }
                 
@@ -769,8 +775,8 @@
                     var data = e.features[0]
                     
                         
-                var selectedOption = document.getElementById('type-polygon').value;
-                if (selectedOption === 'volume') {
+                
+                if (polygonVolume == e.features[0].id) {
 
                     const coordinates = e.features[0].geometry.coordinates[0];
                     const centroPoligono = calcularCentroPoligono(coordinates);
@@ -786,15 +792,17 @@
                     data.properties['Long'] = longitude;
                     data.properties['Lat'] = latitude;
                     data.properties['z0'] = z0_vol.value;
+                    console.log("volume")
                     console.log(data)
 
-                } else if (selectedOption === 'area') {
+                } else if (polygonArea == e.features[0].id) {
 
                     data.properties['id'] = e.features[0].id
                     data.properties['type'] = 'area';
                     data.properties['Aremis'] = alt_emi.value;
                     data.properties['Relhgt'] = area_emi.value;
                     data.properties['z0'] = alt_terro.value;
+                    console.log("area")
                     console.log(data)
                 }
             
@@ -852,18 +860,16 @@
 
 
         map.on('draw.selectionchange', function(e){
+            var data = e.features[0]
+            
             if (e.features[0] != undefined){
-
-                polygonDelete = e.features[0]
-                
+            
 
                 if (e.features[0].geometry.type == "Polygon"){
-
+                    
                     var data = e.features[0]
 
-                      
-                    var selectedOption = document.getElementById('type-polygon').value;
-                    if (selectedOption === 'volume') {
+                    if (polygonVolume == e.features[0].id) {
 
                         const coordinates = e.features[0].geometry.coordinates[0];
                         const centroPoligono = calcularCentroPoligono(coordinates);
@@ -879,16 +885,18 @@
                         data.properties['Long'] = longitude
                         data.properties['Lat'] = latitude
                         data.properties['z0'] = z0_vol.value;
+                        console.log("volume")
 
                         
 
-                    } else if (selectedOption === 'area') {
+                    } else if (polygonArea == e.features[0].id) {
 
                         data.properties['id'] = e.features[0].id
                         data.properties['type'] = 'area';
                         data.properties['Aremis'] = alt_emi.value;
                         data.properties['Relhgt'] = area_emi.value;
                         data.properties['z0'] = alt_terro.value;
+                        console.log("area")
                         
 
                     }

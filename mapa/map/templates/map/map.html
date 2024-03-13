@@ -147,9 +147,9 @@
             <div class="sidebar-content rounded-rect flex-center">
                 
                 <div class="container tab">
-                    <button class="tablinks" onclick="openCity(event, 'London')">A/Vol</button>
-                    <button class="tablinks" onclick="openCity(event, 'Paris')">Ponto</button>
-                    <button class="tablinks" onclick="openCity(event, 'Tokyo')">Linha</button>
+                    <button id='bt-area' class="tablinks" onclick="openCity(event, 'London')">A/Vol</button>
+                    <button id='bt-point' class="tablinks" onclick="openCity(event, 'Paris')">Ponto</button>
+                    <button id='bt-line' class="tablinks" onclick="openCity(event, 'Tokyo')">Linha</button>
                     <button class="tablinks" type="submit" id="enviar">Reload</button>
                     
 
@@ -270,7 +270,7 @@
 
         
         document.getElementById('type-polygon').addEventListener('change', function() {
-            var selectedOption = this.value;
+            var selectedOption = this.value;    
             
             // Ocultar todos os campos
             document.getElementById('volume-fields').style.display = 'none';
@@ -323,9 +323,9 @@
                 var draw = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
-                polygon: true,
-                point: true,
-                line_string: true,
+                polygon: false,
+                point: false,
+                line_string: false,
                 trash: true
             }
         });
@@ -545,6 +545,7 @@
 
                 polygonInfo = e.features[0]
                 polygonDelete = e.features[0]
+                
 
                     new maplibregl.Popup()
                         .setLngLat(e.lngLat)
@@ -622,6 +623,8 @@
 
         // ----------------------- CALCULO DO MEIO DO POLYGON --------------------------
 
+        
+
         function calcularCentroPoligono(coordinates) {
             let sumX = 0;
             let sumY = 0;
@@ -635,12 +638,25 @@
         }
 
 
-        // ----------------------- Criando a area -------------------------------------
+        // ----------------------- Button Draw -------------------------------------
+        var botaoArea = document.getElementById('bt-area');
+        var botaoLine = document.getElementById('bt-line');
+        var botaoPoint = document.getElementById('bt-point');
 
+    // Adiciona um ouvinte de evento para o clique no botão de envio
+    botaoArea.addEventListener('click', function(event) {
+        draw.changeMode('draw_polygon');
+    })
+    botaoLine.addEventListener('click', function(event) {
+        draw.changeMode('draw_line_string');
+    })
+    botaoPoint.addEventListener('click', function(event) {
+        draw.changeMode('draw_point');
+    })
+
+    // --------------------------- POLYGON CREATE ----------------------------------  
 
         map.on('draw.create', function(e) {
-
-        // --------------------------- POLYGON CREATE ----------------------------------    
 
 
             if (e.features[0].geometry.type == "Polygon"){
@@ -944,7 +960,7 @@
             
         })
 
-
+    // ----------------------- AJAX ---------------------------------------
 
         var botaoEnviar = document.getElementById('postar');
 
@@ -952,9 +968,6 @@
         botaoEnviar.addEventListener('click', function(event) {
             // Evita que o formulário seja enviado normalmente
             event.preventDefault();
-
-
-    // ----------------------- AJAX ---------------------------------------
 
                console.log(polygonData)
             
@@ -971,7 +984,7 @@
                     console.log(response);
                     return response.json()
                 } else {
-                    console.error('Erro ao salvar ponto!');
+                    console.error('limite atingido ou erro ao salvar!');
                 }
             }).catch(error => {
                 console.error('Erro ao enviar requisição:', error)

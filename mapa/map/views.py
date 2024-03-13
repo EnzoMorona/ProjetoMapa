@@ -10,19 +10,24 @@ def map(request):
 
 
 def save_point(request):
+
+    max_instances = 5 
+
     if request.method == 'POST':
         # Verificar se há dados no corpo da solicitação
         if request.body:
             # Decodificar os dados JSON do corpo da solicitação
             object = json.loads(request.body)
             data = Post(json = object)
-            data.save()
-            # Aqui você pode acessar os dados conforme necessário
-            print(data)
-            # Você pode manipular os dados aqui e, em seguida, retornar uma resposta JSON
-            # Exemplo de manipulação de dados:
-            response_data = {'status': 'success', 'message': 'Dados recebidos com sucesso'}
-            return JsonResponse(response_data)
+            if Post.objects.count() < max_instances:
+                data.save()
+
+                response_data = {'status': 'success', 'message': 'Dados recebidos com sucesso'}
+                return JsonResponse(response_data)
+            else:
+                return JsonResponse({'error': 'Limite de instâncias excedido!'}, status=400)
+
+
     else:
         return JsonResponse({'success': False, 'error': 'Método não permitido'})
     
